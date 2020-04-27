@@ -1,5 +1,9 @@
-if not package.cpath:find(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib\\?.dll", 1, true) then package.cpath = package.cpath .. ";" .. os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib\\?.dll" end
-local ProddyUtils = require("ProddyUtils")
+if not ProddyUtils then
+	if not package.cpath:find(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib\\?.dll", 1, true) then
+		package.cpath = package.cpath .. ";" .. os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib\\?.dll"
+	end
+	ProddyUtils = require("ProddyUtils")
+end
 
 -- ProddyUtils.Clipboard
 local ClipboardText = ProddyUtils.Clipboard.GetText()
