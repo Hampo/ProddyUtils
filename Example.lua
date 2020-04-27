@@ -56,14 +56,14 @@ if Exists then
 else
 	-- Directory or file doesn't exist on user's system.
 end
- 
+
 local IterateCompleted = ProddyUtils.IO.IterateDirectory(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts", function(Name, IsDir)
-    -- Returns item name (not full path), and if it's a directory.
-    -- Return true to continue iteration, false to exit
-    return true
+	-- Returns item name (not full path), and if it's a directory.
+	-- Return true to continue iteration, false to exit
+	return true
 end)
 if IterateCompleted then
-    -- Iteration completed without a return false
+	-- Iteration completed without a return false
 else
-    -- Iteration was returned false
+	-- Iteration was returned false
 end
