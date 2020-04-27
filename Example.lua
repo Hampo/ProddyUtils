@@ -74,9 +74,9 @@ if ProddyUtils.IO.DirExists(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\
 	-- Exists and is file
 end
 
-local files = ProddyUtils.IO.DirExists(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib")
+local files = ProddyUtils.IO.GetFiles(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib")
 -- All files in top level directory
-local luaAndDLLFiles = ProddyUtils.IO.DirExists(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib", ".lua", ".dll")
+local luaAndDLLFiles = ProddyUtils.IO.GetFiles(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib", ".lua", ".dll")
 -- All Lua and DLL files in top level directory
 
 local IterateCompleted = ProddyUtils.IO.IterateDirectory(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts", function(Name, IsDir)
