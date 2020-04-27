@@ -1,5 +1,8 @@
 # ProddyUtils
+
 Util functions for Lua 5.3. Specifically created for 2Take1Menu.
+
+- [Have a look at the example](Example.lua)
 
 ## Clipboard
 
