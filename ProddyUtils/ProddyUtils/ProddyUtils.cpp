@@ -259,9 +259,29 @@ static int lua_exists(lua_State* L)
 	auto strPath = UTF8ToUTF16(text, len);
 	auto bDirectory = false;
 	auto bExists = exists(strPath, bDirectory);
-	lua_pushboolean(L, true);
+	lua_pushboolean(L, bExists);
 	lua_pushboolean(L, bDirectory);
 	return 2;
+}
+
+static int lua_fileexists(lua_State* L) {
+	size_t len;
+	auto text = luaL_checklstring(L, 1, &len);
+	auto strPath = UTF8ToUTF16(text, len);
+	auto bDirectory = false;
+	auto bExists = exists(strPath, bDirectory);
+	lua_pushboolean(L, bExists && !bDirectory);
+	return 1;
+}
+
+static int lua_direxists(lua_State* L) {
+	size_t len;
+	auto text = luaL_checklstring(L, 1, &len);
+	auto strPath = UTF8ToUTF16(text, len);
+	auto bDirectory = false;
+	auto bExists = exists(strPath, bDirectory);
+	lua_pushboolean(L, bExists && bDirectory);
+	return 1;
 }
 
 static int lua_iteratedirectory(lua_State* L)
@@ -315,7 +335,9 @@ static const struct luaL_Reg MsgBox[] = {
 };
 static const struct luaL_Reg IO[] = {
 	{"CreateDirectory", lua_createdirectory},
+	{"DirExists", lua_direxists},
 	{"Exists", lua_exists},
+	{"FileExists", lua_fileexists},
 	{"IterateDirectory", lua_iteratedirectory},
 	{NULL, NULL}
 };
