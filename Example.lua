@@ -4,6 +4,11 @@ if not ProddyUtils then
 	end
 	ProddyUtils = require("ProddyUtils")
 end
+if not (ProddyUtils.CheckVersion and ProddyUtils.CheckVersion(1, 3)) then -- Check function exists (added in 1.3), then call function with minimum required version
+	local ver = ProddyUtils.GetVersion and "v" .. table.concat(ProddyUtils.GetVersion(), ".") or "Unknown" -- Get current version or Unknown (added in 1.3)
+	-- Some error handling
+	return -- Exit because wrong version
+end
 
 -- ProddyUtils.Clipboard
 local ClipboardText = ProddyUtils.Clipboard.GetText()
@@ -50,6 +55,10 @@ else
 	-- Directory couldn't be created. Probably invalid path or permissions.
 end
 
+if ProddyUtils.IO.DirExists(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib\\ProddyUtils") then
+	-- Exists and is directory
+end
+
 local Exists, IsDir = ProddyUtils.IO.Exists(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib\\ProddyUtils")
 if Exists then
 	if IsDir then
@@ -60,6 +69,15 @@ if Exists then
 else
 	-- Directory or file doesn't exist on user's system.
 end
+
+if ProddyUtils.IO.DirExists(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib\\ProddyUtils.dll") then
+	-- Exists and is file
+end
+
+local files = ProddyUtils.IO.DirExists(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib")
+-- All files in top level directory
+local luaAndDLLFiles = ProddyUtils.IO.DirExists(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib", ".lua", ".dll")
+-- All Lua and DLL files in top level directory
 
 local IterateCompleted = ProddyUtils.IO.IterateDirectory(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts", function(Name, IsDir)
 	-- Returns item name (not full path), and if it's a directory.

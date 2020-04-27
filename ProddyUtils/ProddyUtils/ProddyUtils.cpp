@@ -1,7 +1,51 @@
 #include <windows.h>
 #include <string>
 #include <experimental/filesystem>
+#include <sstream>
 #include "lua.hpp"
+
+#pragma region Version
+static const int Major = 1;
+static const int Minor = 3;
+static const int Build = 0;
+
+static int lua_checkversion(lua_State* L)
+{
+	auto major = luaL_checkinteger(L, 1);
+	auto minor = luaL_optinteger(L, 2, 0);
+	auto build = luaL_optinteger(L, 3, 0);
+	if (Major > major)
+		lua_pushboolean(L, true);
+	else if (Major < major)
+		lua_pushboolean(L, false);
+	else
+		if (Minor > minor)
+			lua_pushboolean(L, true);
+		else if (Minor < minor)
+			lua_pushboolean(L, false);
+		else
+			if (Build >= build)
+				lua_pushboolean(L, true);
+			else
+				lua_pushboolean(L, false);
+	return 1;
+}
+
+static int lua_getversion(lua_State* L)
+{
+	lua_newtable(L);
+	lua_pushinteger(L, 1);
+	lua_pushinteger(L, Major);
+	lua_settable(L, -3);
+	lua_pushinteger(L, 2);
+	lua_pushinteger(L, Minor);
+	lua_settable(L, -3);
+	lua_pushinteger(L, 3);
+	lua_pushinteger(L, Build);
+	lua_settable(L, -3);
+	return 1;
+}
+#pragma endregion
 
 #pragma region UTFUtils
 #ifdef _WIN64
@@ -219,7 +263,7 @@ static int lua_msgbox(lua_State* L)
 #pragma endregion
 
 #pragma region IO
-bool exists(const std::wstring& strPath, bool& isDir)
+bool Exists(const std::wstring& strPath, bool& isDir)
 {
 	DWORD dw = GetFileAttributesW(strPath.c_str());
 	if (dw != INVALID_FILE_ATTRIBUTES)
@@ -230,6 +274,16 @@ bool exists(const std::wstring& strPath, bool& isDir)
 	}
 	else
 		return false;
+}
+std::wstring GetExtension(const std::wstring& strName) {
+	if (empty(strName))
+		return L"";
+	auto period = strName.find_last_of(L'.');
+	if (period == std::wstring::npos)
+		return L"";
+	auto strExt = strName.substr(period);
+	std::transform(strExt.begin(), strExt.end(), strExt.begin(), towlower);
+	return strExt;
 }
 
 static int lua_createdirectory(lua_State* L)
@@ -243,7 +297,7 @@ static int lua_createdirectory(lua_State* L)
 	}
 	auto strPath = UTF8ToUTF16(text, len);
 	auto isDir = false;
-	if (exists(strPath, isDir) && isDir)
+	if (Exists(strPath, isDir) && isDir)
 	{
 		lua_pushboolean(L, true);
 		return 1;
@@ -258,7 +312,7 @@ static int lua_exists(lua_State* L)
 	auto text = luaL_checklstring(L, 1, &len);
 	auto strPath = UTF8ToUTF16(text, len);
 	auto bDirectory = false;
-	auto bExists = exists(strPath, bDirectory);
+	auto bExists = Exists(strPath, bDirectory);
 	lua_pushboolean(L, bExists);
 	lua_pushboolean(L, bDirectory);
 	return 2;
@@ -269,7 +323,7 @@ static int lua_fileexists(lua_State* L) {
 	auto text = luaL_checklstring(L, 1, &len);
 	auto strPath = UTF8ToUTF16(text, len);
 	auto bDirectory = false;
-	auto bExists = exists(strPath, bDirectory);
+	auto bExists = Exists(strPath, bDirectory);
 	lua_pushboolean(L, bExists && !bDirectory);
 	return 1;
 }
@@ -279,7 +333,7 @@ static int lua_direxists(lua_State* L) {
 	auto text = luaL_checklstring(L, 1, &len);
 	auto strPath = UTF8ToUTF16(text, len);
 	auto bDirectory = false;
-	auto bExists = exists(strPath, bDirectory);
+	auto bExists = Exists(strPath, bDirectory);
 	lua_pushboolean(L, bExists && bDirectory);
 	return 1;
 }
@@ -321,9 +375,57 @@ static int lua_iteratedirectory(lua_State* L)
 	lua_pushboolean(L, bCompleted);
 	return 1;
 }
+
+static int lua_getfiles(lua_State* L) {
+	size_t len;
+	auto text = luaL_checklstring(L, 1, &len);
+	auto strPath = UTF8ToUTF16(text, len) + L"\\*";
+	auto size = lua_gettop(L);
+	std::wstring* exts = nullptr;
+	if (size > 0)
+	{
+		exts = new std::wstring[size];
+		for (int i = 0; i < size; i++)
+		{
+			size_t eLen;
+			auto ext = luaL_checklstring(L, i + 1, &eLen);
+			auto strExt = UTF8ToUTF16(ext, eLen);
+			std::transform(strExt.begin(), strExt.end(), strExt.begin(), towlower);
+			exts[i] = strExt;
+		}
+	}
+	WIN32_FIND_DATAW FindFileData;
+	HANDLE hFind = FindFirstFileW(strPath.c_str(), &FindFileData);
+	lua_newtable(L);
+	auto i = 0;
+	if (hFind != INVALID_HANDLE_VALUE)
+	{
+		for (;;)
+		{
+			std::wstring strName = FindFileData.cFileName;
+			if ((FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0 && strName != L".." && strName != L"." && (size == 0 || std::find(exts, exts+size, GetExtension(strName)) != exts+size))
+			{
+				i++;
+				lua_pushinteger(L, i);
+				lua_pushlstring(L, strName);
+				lua_settable(L, -3);
+			}
+			if (!FindNextFileW(hFind, &FindFileData))
+				break;
+		}
+		FindClose(hFind);
+	}
+	delete[] exts;
+	return 1;
+}
 #pragma endregion
 
 #pragma region LuaOpen
+static const struct luaL_Reg ProddyUtils[] = {
+	{"CheckVersion", lua_checkversion},
+	{"GetVersion", lua_getversion},
+	{NULL, NULL}
+};
 static const struct luaL_Reg Clipboard[] = {
 	{"GetText", lua_getclipboard},
 	{"SetText", lua_setclipboard},
@@ -338,13 +440,14 @@ static const struct luaL_Reg IO[] = {
 	{"DirExists", lua_direxists},
 	{"Exists", lua_exists},
 	{"FileExists", lua_fileexists},
+	{"GetFiles", lua_getfiles},
 	{"IterateDirectory", lua_iteratedirectory},
 	{NULL, NULL}
 };
 
 extern "C" __declspec(dllexport) int luaopen_ProddyUtils(lua_State * L)
 {
-	lua_newtable(L);
+	luaL_newlib(L, ProddyUtils);
 	luaL_newlib(L, Clipboard);
 	lua_setfield(L, -2, "Clipboard");
 	luaL_newlib(L, IO);
@@ -375,6 +478,18 @@ extern "C" __declspec(dllexport) int luaopen_ProddyUtils(lua_State * L)
 	lua_setfield(L, -2, "No");
 	lua_setfield(L, -2, "DialogResult");
 	lua_setfield(L, -2, "MessageBox");
+
+	lua_getglobal(L, "ui");
+	lua_getfield(L, -1, "notify_above_map");
+	std::stringstream ss;
+	ss << "ProddyUtils v" << Major << "." << Minor << "." << Build << " loaded.";
+	lua_pushstring(L, ss.str().c_str());
+	lua_pushstring(L, "ProddyUtils");
+	lua_pushinteger(L, 140);
+	if (lua_pcall(L, 3, 0, 0) != 0) {
+		lua_pop(L, 1);
+	}
+	lua_pop(L, 1);
 	return 1;
 }
 #pragma endregion
