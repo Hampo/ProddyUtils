@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <string>
+#include <experimental/filesystem>
 #include "lua.hpp"
 
 #pragma region UTFUtils
@@ -247,18 +248,7 @@ static int lua_createdirectory(lua_State* L)
 		lua_pushboolean(L, true);
 		return 1;
 	}
-	size_t pos = (len >= 3 && strPath.substr(1, 1) == L":")?strPath.find_first_of(L"\\/", 1):0;
-	do {
-		pos = strPath.find_first_of(L"\\/", pos + 1);
-		if (!CreateDirectoryW(strPath.substr(0, pos).c_str(), nullptr)) {
-			DWORD err = GetLastError();
-			if (err != ERROR_ALREADY_EXISTS) {
-				lua_pushboolean(L, false);
-				return 1;
-			}
-		}
-	} while (pos != std::string::npos);
-	lua_pushboolean(L, true);
+	lua_pushboolean(L, std::experimental::filesystem::create_directories(strPath));
 	return 1;
 }
 
