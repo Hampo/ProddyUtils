@@ -522,7 +522,7 @@ static const struct luaL_Reg IO[] = {
 	{"IterateDirectory", lua_iteratedirectory},
 	{NULL, NULL}
 };
-static const struct luaL_Reg Time[] = {
+static const struct luaL_Reg OS[] = {
 	{"GetTimeMillis", lua_gettimemillis},
 	{"GetTimeMicro", lua_gettimemicro},
 	{"GetTimeNano", lua_gettimenano},
@@ -539,8 +539,8 @@ extern "C" __declspec(dllexport) int luaopen_ProddyUtils(lua_State * L)
 	luaL_newlib(L, IO);
 	lua_setfield(L, -2, "IO");
 
-	luaL_newlib(L, Time);
-	lua_setfield(L, -2, "Time");
+	luaL_newlib(L, OS);
+	lua_setfield(L, -2, "OS");
 
 	luaL_newlib(L, Keyboard);
 	lua_newtable(L);

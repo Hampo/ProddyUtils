@@ -89,3 +89,21 @@ if IterateCompleted then
 else
 	-- Iteration was returned false
 end
+
+if ProddyUtils.Keyboard.IsKeyPressed(ProddyUtils.Keyboard.Keys.Control, ProddyUtils.Keyboard.Keys.W) then
+	-- Either Left or Right Control is pressed and W
+else
+	-- Combination not pressed
+end
+
+ProddyUtils.Keyboard.KeyDown(ProddyUtils.Keyboard.DXKeys.W)
+-- Pressed W in a way that DirectInput will recognise
+ProddyUtils.Keyboard.KeyUp(ProddyUtils.Keyboard.DXKeys.W)
+-- Releases W in a way that DirectInput will recognise
+
+local nano = ProddyUtils.OS.GetTimeNano()
+-- Nanoseconds since epoch
+local micro = ProddyUtils.OS.GetTimeMicro()
+-- Microseconds since epoch
+local millis = ProddyUtils.OS.GetTimeMillis()
+-- Milliseconds since epoch
