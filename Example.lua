@@ -107,3 +107,10 @@ local micro = ProddyUtils.OS.GetTimeMicro()
 -- Microseconds since epoch
 local millis = ProddyUtils.OS.GetTimeMillis()
 -- Milliseconds since epoch
+
+local success, res = ProddyUtils.Net.DownloadString("www.example.com", "/Test.txt")
+if success then
+	-- res is page body
+else
+	-- res is HTTP Status Code
+end

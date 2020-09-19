@@ -10,6 +10,8 @@ These functions are in the root of the library.
 
 ### *bool* `CheckVersion(int Major, int Minor, int Build)`
 ### *table* `GetVersion()`
+### *metatable* `GetMetatable(string TypeName)`
+### *int* `GetTop()`
 
 
 
@@ -44,6 +46,14 @@ The Keyboard functions interact with the user's keyboard.
 ### *void* `Keyboard.KeyUp(Keyboard.DXKeys... Keys)`
 ### `Keyboard.Keys` - Table containing valid keys.
 ### `Keyboard.DXKeys` - Table containing valid  DirectInput keys.
+
+
+
+## Net
+
+The Clipboard functions are used to interact with the system's clipboard. Only supports text.
+
+### *bool*, *string|int* `Net.DownloadString(string Host, string Page)`
 
 
 
