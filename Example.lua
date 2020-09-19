@@ -1,10 +1,11 @@
 if not ProddyUtils then
-	if not package.cpath:find(os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib\\?.dll", 1, true) then
-		package.cpath = package.cpath .. ";" .. os.getenv("APPDATA") .. "\\PopstarDevs\\2Take1Menu\\scripts\\lib\\?.dll"
+	local luaCPath = utils.get_appdata_path("PopstarDevs\\2Take1Menu\\scripts\\lib", "?.dll")
+	if not package.cpath:find(luaCPath, 1, true) then
+		package.cpath = package.cpath .. ";" luaCPath
 	end
 	ProddyUtils = require("ProddyUtils")
 end
-if not (ProddyUtils.CheckVersion and ProddyUtils.CheckVersion(1, 3)) then -- Check function exists (added in 1.3), then call function with minimum required version
+if not (ProddyUtils.CheckVersion and ProddyUtils.CheckVersion(1, 5)) then -- Check function exists (added in 1.3), then call function with minimum required version
 	local ver = ProddyUtils.GetVersion and "v" .. table.concat(ProddyUtils.GetVersion(), ".") or "Unknown" -- Get current version or Unknown (added in 1.3)
 	-- Some error handling
 	return -- Exit because wrong version
