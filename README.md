@@ -49,14 +49,6 @@ The Keyboard functions interact with the user's keyboard.
 
 
 
-## Net
-
-The Clipboard functions are used to interact with the system's clipboard. Only supports text.
-
-### *bool*, *string|int* `Net.DownloadString(string Host, string Page)`
-
-
-
 ## MessageBox
 
 The MessageBox function is used to display a windows MessageBox to the user and receive the selection.
@@ -80,6 +72,14 @@ The MessageBox function is used to display a windows MessageBox to the user and 
 | No          | 5     |
 
 ### *MessageBox.DialogResult* `MessageBox.Show(string Text, string Caption, MessageBox.Buttons Buttons)`
+
+
+
+## Net
+
+The Net functions are used to access things on the network.
+
+### *bool*, *string|int* `Net.DownloadString(string Host, string Page)`
 
 
 
