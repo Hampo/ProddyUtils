@@ -1,13 +1,15 @@
-#include <windows.h>
 #include <string>
-#include <experimental/filesystem>
+#include <filesystem>
 #include <sstream>
 #include <chrono>
+#include <algorithm>
 #include "lua.hpp"
+#include "httplib.h"
+#include <windows.h>
 
 #pragma region Version
 static const int Major = 1;
-static const int Minor = 4;
+static const int Minor = 5;
 static const int Build = 0;
 
 static int lua_checkversion(lua_State* L)
@@ -44,6 +46,20 @@ static int lua_getversion(lua_State* L)
 	lua_pushinteger(L, 3);
 	lua_pushinteger(L, Build);
 	lua_settable(L, -3);
+	return 1;
+}
+
+static int lua_getmetatable(lua_State* L)
+{
+	auto name = luaL_checkstring(L, 1);
+	luaL_getmetatable(L, name);
+	return 1;
+}
+
+static int lua_top(lua_State* L)
+{
+	auto top = lua_gettop(L);
+	lua_pushinteger(L, top);
 	return 1;
 }
 #pragma endregion
@@ -303,7 +319,7 @@ static int lua_createdirectory(lua_State* L)
 		lua_pushboolean(L, true);
 		return 1;
 	}
-	lua_pushboolean(L, std::experimental::filesystem::create_directories(strPath));
+	lua_pushboolean(L, std::filesystem::create_directories(strPath));
 	return 1;
 }
 
@@ -492,15 +508,56 @@ static int lua_gettimenano(lua_State* L)
 }
 #pragma endregion
 
+#pragma region Net
+static int lua_downloadstring(lua_State* L)
+{
+	auto host = luaL_checkstring(L, 1);
+	auto page = luaL_checkstring(L, 2);
+	httplib::Client cli(host);
+
+	auto res = cli.Get(page);
+	if (res)
+	{
+		if (res->status == 200)
+		{
+			lua_pushboolean(L, true);
+			lua_pushstring(L, res->body.c_str());
+		}
+		else
+		{
+			lua_pushboolean(L, false);
+			lua_pushinteger(L, res->status);
+		}
+	}
+	else
+	{
+		lua_pushboolean(L, false);
+		lua_pushnil(L);
+	}
+	return 2;
+}
+#pragma endregion
+
 #pragma region LuaOpen
 static const struct luaL_Reg ProddyUtils[] = {
 	{"CheckVersion", lua_checkversion},
 	{"GetVersion", lua_getversion},
+	{"GetMetatable", lua_getmetatable},
+	{"GetTop", lua_top},
 	{NULL, NULL}
 };
 static const struct luaL_Reg Clipboard[] = {
 	{"GetText", lua_getclipboard},
 	{"SetText", lua_setclipboard},
+	{NULL, NULL}
+};
+static const struct luaL_Reg IO[] = {
+	{"CreateDirectory", lua_createdirectory},
+	{"DirExists", lua_direxists},
+	{"Exists", lua_exists},
+	{"FileExists", lua_fileexists},
+	{"GetFiles", lua_getfiles},
+	{"IterateDirectory", lua_iteratedirectory},
 	{NULL, NULL}
 };
 static const struct luaL_Reg Keyboard[] = {
@@ -513,19 +570,14 @@ static const struct luaL_Reg MsgBox[] = {
 	{"Show", lua_msgbox},
 	{NULL, NULL}
 };
-static const struct luaL_Reg IO[] = {
-	{"CreateDirectory", lua_createdirectory},
-	{"DirExists", lua_direxists},
-	{"Exists", lua_exists},
-	{"FileExists", lua_fileexists},
-	{"GetFiles", lua_getfiles},
-	{"IterateDirectory", lua_iteratedirectory},
-	{NULL, NULL}
-};
 static const struct luaL_Reg OS[] = {
 	{"GetTimeMillis", lua_gettimemillis},
 	{"GetTimeMicro", lua_gettimemicro},
 	{"GetTimeNano", lua_gettimenano},
+	{NULL, NULL}
+};
+static const struct luaL_Reg Net[] = {
+	{"DownloadString", lua_downloadstring},
 	{NULL, NULL}
 };
 
@@ -542,6 +594,9 @@ extern "C" __declspec(dllexport) int luaopen_ProddyUtils(lua_State * L)
 	luaL_newlib(L, OS);
 	lua_setfield(L, -2, "OS");
 
+	luaL_newlib(L, Net);
+	lua_setfield(L, -2, "Net");
+
 	luaL_newlib(L, Keyboard);
 	lua_newtable(L);
 	std::string keystring;
@@ -549,7 +604,8 @@ extern "C" __declspec(dllexport) int luaopen_ProddyUtils(lua_State * L)
 	for (int i = 0; i < 256; ++i) {
 		if (i == 3 || i == 8 || i == 9 || i == 13 || i == 27 || i == 32)
 			continue;
-		if (keybuffer = MapVirtualKey(UINT(i), 2)) {
+		if (keybuffer = MapVirtualKey(UINT(i), 2))
+		{
 			keystring += keybuffer;
 			lua_pushinteger(L, i);
 			lua_setfield(L, -2, keystring.c_str());
